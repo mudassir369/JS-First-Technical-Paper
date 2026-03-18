@@ -1,1 +1,0 @@
-# JS-First-Technical-Paper
