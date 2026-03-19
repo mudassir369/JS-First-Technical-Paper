@@ -59,7 +59,3 @@ function getPrice(price, discount) {
 ## 4. Memory
 Globals live for the entire lifetime of the program and are never garbage collected.
 
----
-
-## Rule
-Keep variables scoped as tightly as possible. Pass data through function arguments and return values instead of sharing state globally.
