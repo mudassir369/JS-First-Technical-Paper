@@ -1,0 +1,178 @@
+# Debugging Strategies
+
+---
+
+## 1. Read the Error Message First
+Don't guess — the error message tells you exactly what went wrong and where.
+
+```
+TypeError: Cannot read properties of undefined (reading 'name')
+    at getUser (app.js:5:20)
+    at main (app.js:12:3)
+```
+
+- Error type: `TypeError`
+- What: accessing `.name` on `undefined`
+- Where: `app.js` line 5
+- Go there first.
+
+---
+
+## 2. `console.log` — Inspect Values
+
+Add logs before the crash to see what data looks like.
+
+```js
+function getFullName(user) {
+  console.log('user received:', user); // inspect here
+  return `${user.firstName} ${user.lastName}`;
+}
+```
+
+Log at key points to trace the flow:
+```js
+function processOrder(order) {
+  console.log('1. Processing order:', order.id);
+  const items = filterAvailable(order.items);
+  console.log('2. Available items:', items);
+  const total = calculateTotal(items);
+  console.log('3. Total:', total);
+  return { items, total };
+}
+```
+
+---
+
+## 3. Use `console.table` for Arrays of Objects
+
+```js
+const users = [
+  { name: 'Bruce', score: 82 },
+  { name: 'Clark', score: 45 },
+];
+console.table(users); // much easier to read than console.log
+```
+
+---
+
+## 4. Isolate the Problem
+
+Reduce the failing code to the smallest possible example.
+
+```js
+// Broken in context:
+const result = getUser(userId).profile.name.toUpperCase();
+
+// Isolate each step:
+const user = getUser(userId);
+console.log('user:', user);           // null?
+
+const profile = user.profile;
+console.log('profile:', profile);     // undefined?
+
+const name = profile.name;
+console.log('name:', name);           // '' ?
+```
+
+---
+
+## 5. Check Assumptions
+
+Most bugs come from assuming data looks a certain way when it doesn't.
+
+```js
+// Assumption: user.tags is an array
+// Reality: it might be undefined or null
+
+function getTags(user) {
+  console.log('tags type:', typeof user.tags, user.tags);
+  return user.tags.join(', '); // crash if undefined
+}
+
+// Fix after checking
+function getTags(user) {
+  if (!Array.isArray(user.tags)) return '';
+  return user.tags.join(', ');
+}
+```
+
+---
+
+## 6. Use the Node.js Debugger
+
+Add `debugger` to pause execution and inspect state.
+
+```js
+function processUser(user) {
+  debugger; // execution pauses here in debugger mode
+  return user.name.toUpperCase();
+}
+```
+
+Run with:
+```bash
+node --inspect app.js
+```
+
+Then open `chrome://inspect` in Chrome.
+
+Or use VS Code's built-in debugger — add breakpoints by clicking the line number.
+
+---
+
+## 7. `typeof` and `instanceof` Checks
+
+When a crash is hard to reproduce, add type guards to expose unexpected values:
+
+```js
+function safeProcess(data) {
+  console.log('type:', typeof data);
+  console.log('is array:', Array.isArray(data));
+  console.log('value:', data);
+}
+```
+
+---
+
+## 8. Binary Search for Bugs
+
+When you don't know where the bug is, comment out half the code, check if the bug persists, then narrow it down.
+
+```js
+function pipeline(data) {
+  const step1 = transform(data);
+  // console.log('after step1:', step1);
+  const step2 = validate(step1);
+  // console.log('after step2:', step2);
+  const step3 = format(step2);
+  return step3;
+}
+
+// Uncomment logs one at a time until you find where data goes wrong
+```
+
+---
+
+## 9. Google the Exact Error Message
+Copy the error message (without the file name/line number) and search:
+```
+TypeError: Cannot read properties of undefined (reading 'map')
+```
+
+Add `mdn` or `stack overflow` to your search for faster results.
+
+---
+
+## 10. Take a Break
+If you've been stuck for more than 20 minutes, step away. Fresh eyes catch bugs faster.
+
+---
+
+## Debugging Checklist
+
+1. ✅ Read the full error message
+2. ✅ Go to the exact line in the stack trace
+3. ✅ `console.log` the value just before the crash
+4. ✅ Check what type/shape you're assuming vs what you're getting
+5. ✅ Isolate — write the smallest test case that reproduces it
+6. ✅ If stuck, search the exact error message
